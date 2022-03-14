@@ -1,0 +1,140 @@
+
+#include <iostream>
+#include <vector>
+#include <set>
+#define seed first 
+#define value second 
+
+using namespace std;
+
+struct Occurence
+{
+	int value;
+	int n_anterior;
+	int n_first;
+	int n_second;
+
+	Occurence(int value, int n_anterior, int n_first, int n_second)
+	{
+		this->value = value;
+		this->n_anterior = n_anterior;
+		this->n_first = n_first;
+		this->n_second = n_second;
+	}
+};
+
+int main()
+{
+	int numberOfPrimes = 98, number = 1;
+	vector<int> primes;
+	primes.push_back(number++);
+	primes.push_back(number++);
+	primes.push_back(number++);
+
+	while (numberOfPrimes)
+	{
+		bool foundDivisor = false;
+		for (int divisor = 2; divisor * divisor <= number; divisor++)
+		{
+			if (number % divisor == 0)
+			{
+				foundDivisor = true;
+				break;
+			}
+		}
+		if (!foundDivisor)
+		{
+			primes.push_back(number++);
+			numberOfPrimes--;
+		}
+		number++;
+	}
+
+	for (size_t i = 0; i < primes.size(); i++)
+	{
+		cout << primes[i] << ' ';
+	}
+
+	set<int> n_anterior_set;
+	set<int> n_first_set;
+
+	vector<Occurence> occurences; //vector in care tin datele n_anterior/first/second despre valori
+
+	vector<pair<int, int>> seedValuePair; //vector in care retin perechi seed-value, unde value este valoarea repetata de 3 ori
+	vector<pair<int, Occurence>> seedOccurencePair; //tabelul cerut pt tema: v[i].first = seed, v[i].second contine campurile value, na,nf,ns
+	int frequence[33000]; //un vector de frecventa unde retin frecventa de 3-repetari; frequence[1] = 2 inseamna ca 1 s-a repetat de 3 ori pentru 2 seeduri
+	fill(frequence, frequence + 33000, 0); //initializez vectorul de frecventa cu 0
+
+	for (size_t i = 0; i < primes.size() - 99; i++)
+	{
+		cout << "\nSeed = " << primes[i] << endl;
+		srand(primes[i]);
+		int current_n = 1; //pasul curent
+		bool enoughRepeated = false; //flag care indica faptul ca am atins a 3a repetare a unei valori
+		occurences.clear();
+		for (int i = 0; i < RAND_MAX+1; i++)
+			occurences.emplace_back(i, -1, -1, -1);
+
+		while (!enoughRepeated)
+		{
+			int currentNumber = rand();
+			cout << current_n << ": " << currentNumber << endl;
+			if (n_anterior_set.find(currentNumber) == n_anterior_set.end()) //daca nu apare in setul primelor aparitii (prima aparitie)
+			{
+				n_anterior_set.insert(currentNumber);
+				occurences[currentNumber].n_anterior = current_n;
+			}
+			else if (n_first_set.find(currentNumber) == n_first_set.end()) //daca nu apare in setul celor de a doua aparitii (a doua aparitie)
+			{
+				n_first_set.insert(currentNumber);
+				occurences[currentNumber].n_first = current_n;
+			}
+			else // a treia aparitie
+			{
+				occurences[currentNumber].n_second = current_n;
+				seedValuePair.emplace_back(primes[i], currentNumber);
+				frequence[currentNumber]++;
+				Occurence oc(currentNumber, occurences[currentNumber].n_anterior, occurences[currentNumber].n_first, occurences[currentNumber].n_second);
+				seedOccurencePair.emplace_back(primes[i], oc);
+				n_anterior_set.clear();
+				n_first_set.clear();
+				enoughRepeated = true;
+			}
+			current_n++;
+		}
+
+	}
+	cout << endl;
+	/*for (size_t i = 0; i < seedValuePair.size(); i++)
+	{
+		cout << seedValuePair[i].seed << ' ' << seedValuePair[i].value << endl;
+	}
+	cout << endl << endl << endl << "Frecvente: ";
+
+	for (size_t i = 0; i < 100; i++)
+	{
+		cout << i << ": " << frequence[i] << endl;
+	}
+
+	cout << endl << endl << endl << "Tabel valoare-anterior-first-second: \n";
+	for (size_t i = 0; i < occurences.size(); i++)
+	{
+		if ((occurences[i].n_anterior < occurences[i].n_first) && (occurences[i].n_first < occurences[i].n_second))
+		{
+			cout.width(2); cout << occurences[i].value << ' ';
+			cout.width(2); cout << occurences[i].n_anterior << ' ';
+			cout.width(2); cout << occurences[i].n_first << ' ';
+			cout.width(2); cout << occurences[i].n_second << endl;
+		}
+	}*/
+	cout << endl << endl << endl << "Seed n_anterior n_first n_second \n";
+	for (size_t i = 0; i < seedOccurencePair.size(); i++)
+	{
+		cout.width(3); cout << seedOccurencePair[i].first << " ";
+		cout.width(7); cout << seedOccurencePair[i].second.n_anterior << " ";
+		cout.width(8); cout << seedOccurencePair[i].second.n_first << ' ';
+		cout.width(8); cout << seedOccurencePair[i].second.n_second << endl;
+
+	}
+}
+

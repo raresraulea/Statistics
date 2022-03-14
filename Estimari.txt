@@ -1,0 +1,90 @@
+
+#include <iostream>
+#include <time.h>
+#define PI 3.14159265358979323846
+
+using namespace std;
+
+//functie care aproximeaza valoarea functiei lui Laplace pentru -4 <= z <= 4
+double phi(double z)
+{
+	double zInitial = z;
+	z = abs(z);
+
+	double pOfMean = 1 / (sqrt(2 * PI));
+	double expInZ = exp(-pow(z, 2) / 2);
+	double rectangleArea = z * pOfMean;
+	int inside = 0;
+	int totalNumberOfPoints = 10500000;
+
+	for (int point = 0; point < totalNumberOfPoints; point++)
+	{
+		double x = z * 1.0 * rand() / RAND_MAX;
+		double y = pOfMean * 1.0 * rand() / RAND_MAX;
+		if (y < pOfMean* exp(-pow(x, 2) / 2)) inside++;
+	}
+
+	double frequency = 1.0*inside / totalNumberOfPoints;
+	double resultForPositiveZ = 0.5 + 1.0 * rectangleArea * frequency;
+
+	return zInitial > 0 ? resultForPositiveZ : 1.0 - resultForPositiveZ;
+}
+
+//aproximare PHI prin integrala evaluata ca suma Riemann 
+double phi2(double z)
+{
+	double zInitial = z;
+	z = abs(z);
+	double dz = 0.00001; //10k pasi per unitate => maxim 40k pasi
+	double area = 0;
+	double pOfMean = 1 / (sqrt(2 * PI));
+	for (double i = 0; i < z; i += dz)
+	{
+		area += exp(-pow(i, 2) / 2)*pOfMean * dz;
+	}
+	return zInitial > 0 ? 0.5 + area : 0.5 - area;
+}
+
+double estimatePI()
+{
+	//consider un cerc de raza 1, centrat in O
+	//aria sfertului de cerc din cadranul 1 raportata  la patratul de latura 1 in care poate fi incadrata
+	//este pi/4, aria sfertului de cerc fiind pi/4 si aria patratului fiind 1
+	//deci pot obtine pi prin calcularea ariei ca frecventa de puncte aleatoare cu (x,y) apartinand (0,1) 
+	//in interiorului patratului cu latura 1 care incadreaza sfertul de cerc din cadranul 1
+	int totalNumberOfPoints = 1000000;
+	int inside = 0;
+	for (int point = 0; point < totalNumberOfPoints; point++)
+	{
+		double randX = 1.0 * rand() / RAND_MAX;
+		double randY = 1.0 * rand() / RAND_MAX;
+		if (randX * randX + randY * randY < 1) ++inside;
+	}
+
+	double frequency = 1.0*inside / totalNumberOfPoints; //
+	double resultedPI = 4 * frequency;
+	return resultedPI;
+}
+
+int main()
+{
+	srand(time(NULL));
+	double z[10] = { -3.1, -2.6, -2, -1.2, -0.5, 0, 0.5, 2.8, 3.2, 3.99 };
+	cout << "Aproximare PHI(z)" << endl;
+	cout << "Monte Carlo " << "    " << "Suma Riemann" << endl;
+	for (int i = 0; i < 10; i++)
+	{
+		cout.width(15);  cout << std::left << phi(z[i]) << ' ';
+		cout << phi2(z[i]) << endl;
+	}
+
+	cout << "\nEstimare PI" << endl;
+	double PIMean = 0;
+	for (int i = 0; i < 50; i++)
+	{
+		double PIValue = estimatePI();
+		PIMean += PIValue;
+		cout << PIValue << endl;
+	}
+	cout << endl << endl << "Medie PI: " << PIMean / 50.0;
+}
